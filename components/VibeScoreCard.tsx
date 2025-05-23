@@ -20,32 +20,31 @@ export default function VibeScoreCard({
   feedback,
 }: VibeScoreProps) {
   const labelColor = {
-    Sketchy: 'bg-red-200 text-red-800',
-    Mixed: 'bg-yellow-200 text-yellow-800',
-    Solid: 'bg-green-200 text-green-800',
+    Sketchy: 'bg-light-red dark:bg-dark-red text-white',
+    Mixed: 'bg-light-yellow dark:bg-dark-yellow text-black',
+    Solid: 'bg-light-green dark:bg-dark-green text-black',
   }[label] || 'bg-gray-200 text-gray-800';
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-md max-w-lg mx-auto mt-6 border">
-      <div className="text-4xl font-bold text-center mb-2">{score}/100</div>
-      <div className={`text-sm font-medium px-2 py-1 rounded-full w-fit mx-auto ${labelColor}`}>
-        {label}
+    <div className="bg-light-card dark:bg-dark-card text-light-foreground dark:text-dark-foreground p-6 rounded-2xl shadow-md max-w-xl mx-auto mt-8 border border-light-border dark:border-dark-border">
+      <div className="text-center">
+        <div className="text-5xl font-extrabold mb-2">{score}/100</div>
+        <div className={`inline-block text-xs font-semibold px-3 py-1 rounded-full ${labelColor}`}>{label}</div>
       </div>
 
-      <div className="text-3xl text-center mt-4">{emojiSummary}</div>
+      <div className="text-4xl text-center mt-6 mb-4">{emojiSummary}</div>
 
-      <blockquote className="italic text-center mt-4 text-gray-600">“{pullQuote}”</blockquote>
+      <blockquote className="italic text-base text-center text-gray-600 dark:text-gray-300 px-6 py-3 border-l-4 border-light-blue dark:border-dark-blue">
+        “{pullQuote}”
+      </blockquote>
 
-      <div className="text-sm text-gray-700 mt-4 text-center">{feedback}</div>
+      <div className="text-sm text-center mt-4 max-w-md mx-auto text-gray-700 dark:text-gray-300">
+        {feedback}
+      </div>
 
-      {flags.length > 0 && (
-        <div className="mt-4 text-xs text-gray-500 text-center">
-          Flags: {flags.join(', ')}
-        </div>
-      )}
-
-      <div className="mt-4 text-xs text-gray-400 text-center">
-        Confidence: {confidence}
+      <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400 border-t border-light-border dark:border-dark-border mt-6 pt-3">
+        <span>Flags: {flags.length > 0 ? flags.join(', ') : 'None'}</span>
+        <span>Confidence: {confidence}</span>
       </div>
     </div>
   );
