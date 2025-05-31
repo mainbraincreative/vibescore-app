@@ -128,14 +128,19 @@ export default function VibeForm() {
       {result && (
         <div className="mt-8 w-full max-w-xl">
           <VibeScoreCard
-            score={result.score}
-            label={result.label}
-            confidence={result.confidence}
-            flags={result.flags}
-            emojiSummary={result.emojiSummary}
-            pullQuote={result.pullQuote}
-            feedback={result.feedback}
-          />
+  score={result.score}
+  label={result.label}
+  labelCategory={result.labelCategory}
+  relationshipType={result.relationshipType}
+  confidence={result.confidence}
+  confidenceLevel={result.confidenceLevel}
+  flags={result.flags}
+  emojiSummary={result.emojiSummary}
+  pullQuote={result.pullQuote}
+  feedback={result.feedback}
+  suggestions={result.suggestions}
+/>
+
         </div>
       )}
     </div>
