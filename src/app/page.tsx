@@ -1,13 +1,34 @@
 // src/app/page.tsx
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import Tesseract from 'tesseract.js';
+
+// Define proper types
+interface VibeResult {
+  score: number;
+  label: string;
+  pullQuote: string;
+  feedback: string;
+  flags: Array<{ type: string; emoji?: string }> | string[];
+  replies: {
+    empathetic: { text: string; why: string };
+    direct: { text: string; why: string };
+    playful: { text: string; why: string };
+  };
+}
+
+interface Reply {
+  tone: string;
+  message: string;
+  rationale: string;
+  expectedOutcome: string;
+}
 
 export default function HomePage() {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<VibeResult | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [activeTone, setActiveTone] = useState('empathetic');
@@ -31,11 +52,11 @@ export default function HomePage() {
       
       if (Array.isArray(data.replies)) {
         // Convert array of reply objects to the expected format
-        const replyArray = data.replies || [];
+        const replyArray = data.replies as Reply[];
         const replies = {
-          empathetic: replyArray.find((r: any) => r.tone === 'empathetic') || {},
-          direct: replyArray.find((r: any) => r.tone === 'direct') || {},
-          playful: replyArray.find((r: any) => r.tone === 'playful') || {}
+          empathetic: replyArray.find((r) => r.tone === 'empathetic') || {},
+          direct: replyArray.find((r) => r.tone === 'direct') || {},
+          playful: replyArray.find((r) => r.tone === 'playful') || {}
         };
         
         transformedResult = {
@@ -46,16 +67,16 @@ export default function HomePage() {
           flags: data.flags || [],
           replies: {
             empathetic: { 
-              text: replies.empathetic.message || "Thanks for sharing that with me", 
-              why: replies.empathetic.rationale || "Shows appreciation while keeping it light" 
+              text: (replies.empathetic as Reply).message || "Thanks for sharing that with me", 
+              why: (replies.empathetic as Reply).rationale || "Shows appreciation while keeping it light" 
             },
             direct: { 
-              text: replies.direct.message || "That's good to know", 
-              why: replies.direct.rationale || "Clear and straightforward response" 
+              text: (replies.direct as Reply).message || "That's good to know", 
+              why: (replies.direct as Reply).rationale || "Clear and straightforward response" 
             },
             playful: { 
-              text: replies.playful.message || "Haha interesting! 😄", 
-              why: replies.playful.rationale || "Keeps the mood light and engaging" 
+              text: (replies.playful as Reply).message || "Haha interesting! 😄", 
+              why: (replies.playful as Reply).rationale || "Keeps the mood light and engaging" 
             }
           }
         };
@@ -183,7 +204,7 @@ export default function HomePage() {
 
   // Social sharing function
   const shareToSocial = (platform: string) => {
-    const shareText = `My VibeScore: ${result.score} - ${mood?.text}\n\n"${result.pullQuote}"\n\n${result.feedback}\n\nAnalyzed by VibeScore.app 🔮`;
+    const shareText = `My VibeScore: ${result?.score} - ${mood?.text}\n\n&quot;${result?.pullQuote}&quot;\n\n${result?.feedback}\n\nAnalyzed by VibeScore.app 🔮`;
     const shareUrl = 'https://vibescore.app';
     
     const urls: { [key: string]: string } = {
@@ -237,7 +258,7 @@ export default function HomePage() {
             >
               <h2 className="text-lg font-semibold mb-4" style={{ color: '#5a4a6e' }}>Text or Screenshot</h2>
               <p className="text-sm font-light mb-4" style={{ color: '#8a7a9e' }}>
-                Paste text OR drop a screenshot - we'll read both!
+                Paste text OR drop a screenshot - we&apos;ll read both!
               </p>
               
               {/* Combined Input Area */}
@@ -272,7 +293,7 @@ export default function HomePage() {
                     Or drop a screenshot here
                   </p>
                   <p className="text-xs mt-1" style={{ color: '#8a7a9e' }}>
-                    Click to upload or drag & drop
+                    Click to upload or drag &amp; drop
                   </p>
                   
                   {/* File Upload Input */}
@@ -366,7 +387,9 @@ export default function HomePage() {
                   border: '1px solid #F8C8C8'
                 }}
               >
-                <p className="font-light italic text-base" style={{ color: '#5a4a6e' }}>"{result.pullQuote}"</p>
+                <p className="font-light italic text-base" style={{ color: '#5a4a6e' }}>
+                  &ldquo;{result.pullQuote}&rdquo;
+                </p>
               </div>
 
               <div className="text-sm text-center leading-relaxed font-light px-2" style={{ color: '#8a7a9e' }}>
@@ -376,8 +399,7 @@ export default function HomePage() {
               {/* Fixed Flags Display */}
               {result.flags && result.flags.length > 0 && (
                 <div className="flex flex-wrap gap-2 justify-center pt-2">
-                  {result.flags.slice(0, 3).map((flag: any, idx: number) => (
-                    <div 
+{result.flags.slice(0, 3).map((flag, idx) => (                    <div 
                       key={idx} 
                       className="px-4 py-2 rounded-full text-xs font-light"
                       style={{
@@ -519,7 +541,7 @@ export default function HomePage() {
               </button>
               <button
                 onClick={() => {
-                  const shareText = `My VibeScore: ${result.score} - ${mood?.text}\n\n"${result.pullQuote}"\n\n${result.feedback}\n\nAnalyzed by VibeScore.app 🔮`;
+                  const shareText = `My VibeScore: ${result.score} - ${mood?.text}\n\n&quot;${result.pullQuote}&quot;\n\n${result.feedback}\n\nAnalyzed by VibeScore.app 🔮`;
                   navigator.clipboard.writeText(shareText);
                   setCopiedShare(true);
                   setTimeout(() => setCopiedShare(false), 2000);
@@ -554,20 +576,21 @@ export default function HomePage() {
           </button>
         </div>
       )}
-      {/* Privacy Notice - Add this at the bottom */}
-<div className="mt-12 text-center">
-  <div className="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-white bg-opacity-25 border border-white border-opacity-30">
-    <div className="text-lg">🔒</div>
-    <div className="text-left">
-      <p className="text-sm font-medium" style={{ color: '#5a4a6e' }}>
-        Your privacy matters
-      </p>
-      <p className="text-xs" style={{ color: '#8a7a9e' }}>
-        We never store your conversations. Analysis happens in real-time and is immediately discarded.
-      </p>
-    </div>
-  </div>
-</div>
+
+      {/* Privacy Notice */}
+      <div className="mt-12 text-center">
+        <div className="inline-flex items-center gap-2 px-4 py-3 rounded-2xl bg-white bg-opacity-50 border border-white border-opacity-30">
+          <div className="text-lg">🔒</div>
+          <div className="text-left">
+            <p className="text-sm font-medium" style={{ color: '#5a4a6e' }}>
+              Your privacy matters
+            </p>
+            <p className="text-xs" style={{ color: '#8a7a9e' }}>
+              We never store your conversations. Analysis happens in real-time and is immediately discarded.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

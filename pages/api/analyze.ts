@@ -31,16 +31,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       flags: ['inconsistency', 'vagueness'],
       confidence: 'Medium',
       emojiSummary: '🤔📉🧐',
-      pullQuote: '“Idk if I'll be around but maybe hit me up”',
-      feedback: 'The energy here is a little unclear—maybe test the waters, but don't cannonball in.',
+      pullQuote: "“Idk if I'll be around but maybe hit me up”", // Fixed: use double quotes
+      feedback: "The energy here is a little unclear—maybe test the waters, but don't cannonball in.", // Fixed: use double quotes
     });
   }
 
   try {
     const result = await getVibeAnalysis(sanitizedText);
     return res.status(200).json(result);
-  } catch (error: any) {
+  } catch (error: unknown) {  // Changed from 'any' to 'unknown'
     console.error('VibeScore API Error:', error);
-    return res.status(500).json({ error: 'Something went wrong while scoring the vibe.' });
+    return res.status(500).json({ error: 'Something went wrong while checking the vibe.' });
   }
 }
