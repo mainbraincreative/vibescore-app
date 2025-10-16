@@ -241,7 +241,7 @@ export default function HomePage() {
           className="text-lg font-light tracking-wide max-w-md mx-auto mt-2"
           style={{ color: '#5a4a6e' }}
         >
-          Decode your DMs. Text with confidence.
+          Your most experienced friend in the group chat.
         </p>
       </div>
 
@@ -256,9 +256,9 @@ export default function HomePage() {
                 border: '1px solid rgba(255,255,255,0.5)',
               }}
             >
-              <h2 className="text-lg font-semibold mb-4" style={{ color: '#5a4a6e' }}>Text or Screenshot</h2>
+              <h2 className="text-lg font-semibold mb-4" style={{ color: '#5a4a6e' }}>Drop the Receipts</h2>
               <p className="text-sm font-light mb-4" style={{ color: '#8a7a9e' }}>
-                Paste text OR drop a screenshot - we&apos;ll read both!
+              Paste that confusing text or upload a screenshot
               </p>
               
               {/* Combined Input Area */}
@@ -330,20 +330,20 @@ export default function HomePage() {
             <button
               type="submit"
               disabled={loading || (!text.trim() && !uploadedFile)}
-              className="w-full py-4 text-base font-semibold rounded-2xl transition-all duration-200 disabled:opacity-50 tracking-wide shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100 border-2"
+              className="w-full py-4 text-base font-semibold rounded-2xl transition-all duration-200 disabled:opacity-50 tracking-wide shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100 border-2 !text-white"
               style={{
                 background: '#c18de5',
-                color: '#ffffff',
+                color: '#ffffff !important',
                 borderColor: 'rgba(255,255,255,0.3)'
               }}
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin"></div>
-                  Reading the vibes...
+                  Checking the vibes...
                 </span>
               ) : (
-                '+ Get My VibeScore'
+                '📱 Get the VibeScore'
               )}
             </button>
           </form>
@@ -583,7 +583,7 @@ export default function HomePage() {
           <div className="text-lg">🔒</div>
           <div className="text-left">
             <p className="text-sm font-medium" style={{ color: '#5a4a6e' }}>
-              Your privacy matters
+            Your secrets are safe with us.
             </p>
             <p className="text-xs" style={{ color: '#8a7a9e' }}>
               We never store your conversations. Analysis happens in real-time and is immediately discarded.
