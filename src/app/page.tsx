@@ -593,4 +593,4 @@ export default function HomePage() {
       </div>
     </div>
   );
-}
+}// Cultural copy updates deployed Thu Oct 16 19:14:17 PDT 2025
