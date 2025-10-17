@@ -277,6 +277,38 @@ export default function HomePage() {
 
   const mood = result ? getScoreMood(result.score) : null;
 
+  // PRIORITY 1: Dynamic score colors like Spotify Wrapped
+const getScoreColor = (score: number) => {
+  if (score >= 80) return 'text-green-500';
+  if (score >= 60) return 'text-yellow-500';
+  if (score >= 40) return 'text-orange-500';
+  return 'text-red-500';
+};
+
+const getScoreBgColor = (score: number) => {
+  if (score >= 80) return 'bg-green-100 border-green-200';
+  if (score >= 60) return 'bg-yellow-100 border-yellow-200';
+  if (score >= 40) return 'bg-orange-100 border-orange-200';
+  return 'bg-red-100 border-red-200';
+};
+
+// PRIORITY 4: Color-coded flag system
+const getFlagColor = (flag: any) => {
+  const flagText = flag.type || flag.toString().toLowerCase();
+  const redFlags = ['gaslighting', 'manipulation', 'toxic', 'red flag', 'controlling', 'abusive', 'frustration'];
+  const yellowFlags = ['mixed signals', 'passive aggressive', 'unclear', 'confusing', 'vague'];
+  const greenFlags = ['healthy', 'respectful', 'clear', 'positive', 'supportive'];
+  
+  if (redFlags.some(f => flagText.toLowerCase().includes(f))) 
+    return 'bg-red-500 text-white border-red-600 shadow-lg';
+  if (yellowFlags.some(f => flagText.toLowerCase().includes(f))) 
+    return 'bg-yellow-500 text-black border-yellow-600 shadow-lg';
+  if (greenFlags.some(f => flagText.toLowerCase().includes(f))) 
+    return 'bg-green-500 text-white border-green-600 shadow-lg';
+  
+  return 'bg-purple-500 text-white border-purple-600 shadow-lg';
+};
+
   // Social sharing function
   const shareToSocial = (platform: string) => {
     const shareText = `My VibeScore: ${result?.score} - ${mood?.text}\n\n"${result?.pullQuote}"\n\n${result?.feedback}\n\nAnalyzed by VibeScore.app 🔮`;
@@ -350,55 +382,42 @@ export default function HomePage() {
               
               {/* File Upload - Simplified */}
               <div className="space-y-4">
-                {/* File Input Button - Clear primary action */}
-                <div className="text-center">
-                  <label 
-                    htmlFor="screenshot-upload"
-                    className="inline-flex items-center gap-2 px-6 py-4 rounded-xl border-2 border-dashed cursor-pointer transition-all hover:bg-purple-50"
-                    style={{
-                      borderColor: isDragOver ? '#8B5FBF' : '#E2D1F9',
-                      background: isDragOver ? 'rgba(139, 95, 191, 0.05)' : 'rgba(226, 209, 249, 0.1)',
-                      color: '#5a4a6e'
-                    }}
-                  >
-                    <span className="text-2xl">📸</span>
-                    <div className="text-left">
-                      <p className="text-sm font-medium">Upload a screenshot</p>
-                      <p className="text-xs" style={{ color: '#8a7a9e' }}>
-                        Click to browse or drag & drop
-                      </p>
-                    </div>
-                  </label>
-                  
-                  <input
-                    id="screenshot-upload"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        handleFileUpload(e.target.files[0]);
-                        e.target.value = '';
-                      }
-                    }}
-                    className="hidden"
-                  />
-                </div>
-
-                {/* Drag & Drop Area - Visual only, uses same file input */}
-                <div
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  className="hidden md:block p-4 rounded-xl border-2 border-dashed text-center transition-all"
-                  style={{
-                    borderColor: isDragOver ? '#8B5FBF' : 'transparent',
-                    background: isDragOver ? 'rgba(139, 95, 191, 0.05)' : 'transparent',
-                  }}
-                >
-                  <p className="text-sm" style={{ color: '#8a7a9e' }}>
-                    Or drag & drop your screenshot here
-                  </p>
-                </div>
+                {/* File Upload - Single area for both click and drag */}
+<div className="text-center">
+  <label 
+    htmlFor="screenshot-upload"
+    className="inline-flex items-center gap-2 px-6 py-4 rounded-xl border-2 border-dashed cursor-pointer transition-all hover:bg-purple-50 w-full justify-center"
+    style={{
+      borderColor: isDragOver ? '#8B5FBF' : '#E2D1F9',
+      background: isDragOver ? 'rgba(139, 95, 191, 0.1)' : 'rgba(226, 209, 249, 0.1)',
+      color: '#5a4a6e'
+    }}
+    onDragOver={handleDragOver}
+    onDragLeave={handleDragLeave}
+    onDrop={handleDrop}
+  >
+    <span className="text-2xl">📸</span>
+    <div className="text-left">
+      <p className="text-sm font-medium">Upload a screenshot</p>
+      <p className="text-xs" style={{ color: '#8a7a9e' }}>
+        Click to browse or drag & drop anywhere here
+      </p>
+    </div>
+  </label>
+  
+  <input
+    id="screenshot-upload"
+    type="file"
+    accept="image/*"
+    onChange={(e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleFileUpload(e.target.files[0]);
+        e.target.value = '';
+      }
+    }}
+    className="hidden"
+  />
+</div>
               </div>
 
               {/* Uploaded File Indicator */}
@@ -454,133 +473,143 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Results Section */}
-      {result && (
+            {/* Results Section - TRANSFORMED AESTHETICS */}
+            {result && (
         <div className="max-w-md w-full space-y-6">
-          {/* Vibe Card - Wrapped for Instagram screenshot */}
+          {/* Vibe Card - COMPLETELY REDESIGNED for Instagram screenshot */}
           <div id="vibescore-result">
             <div
-              className="relative rounded-3xl p-8 shadow-lg border-2"
+              className="relative rounded-3xl p-8 shadow-2xl border-2 backdrop-blur-sm"
               style={{
-                background: '#FFFBFB',
-                borderColor: 'rgba(255,255,255,0.8)'
+                background: 'linear-gradient(135deg, #FFFBFB 0%, #FEF7FF 100%)',
+                borderColor: 'rgba(255,255,255,0.9)'
               }}
             >
-              <div className="absolute -top-3 -right-3">
-                <div 
-                  className="rounded-2xl px-5 py-3 font-medium shadow-md"
-                  style={{
-                    background: getScoreGradient(result.score),
-                    border: '2px solid rgba(255,255,255,0.8)'
-                  }}
-                >
-                  <div className="text-3xl font-light" style={{ color: '#5a4a6e' }}>{result.score}</div>
-                  <div className="text-xs uppercase tracking-wider mt-1" style={{ color: '#5a4a6e' }}>Score</div>
+              {/* PRIORITY 1: HERO SCORE - Centered and dramatic */}
+              <div className="text-center mb-6">
+                <div className={`inline-flex flex-col items-center justify-center p-6 rounded-3xl border-2 ${getScoreBgColor(result.score)}`}>
+                  {/* Dynamic score with color zones */}
+                  <div className={`text-7xl font-black ${getScoreColor(result.score)} animate-pulse`}>
+                    {result.score}
+                  </div>
+                  <div className="text-lg font-bold uppercase tracking-widest mt-2" style={{ color: '#5a4a6e' }}>
+                    VibeScore
+                  </div>
+                </div>
+                
+                {/* Mood with larger emoji */}
+                <div className="mt-4">
+                  <div className="text-4xl mb-2">{mood?.emoji}</div>
+                  <h1 className="text-2xl font-bold tracking-wide" style={{ color: '#5a4a6e' }}>
+                    {mood?.text}
+                  </h1>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                <div className="text-center pt-4">
-                  <div className="text-4xl mb-3">{mood?.emoji}</div>
-                  <h1 className="text-xl font-light tracking-wide" style={{ color: '#5a4a6e' }}>{mood?.text}</h1>
-                </div>
+              {/* PRIORITY 5: EMOJI STRIP as visual divider */}
+              <div className="flex justify-center gap-3 my-6 text-3xl">
+                {['😬', '⚠️', '🚩', '💀', '🫠'].map((emoji, index) => (
+                  <span key={index} className="animate-bounce" style={{ animationDelay: `${index * 0.1}s` }}>
+                    {emoji}
+                  </span>
+                ))}
+              </div>
 
-                <div 
-                  className="text-center leading-relaxed rounded-2xl p-6"
-                  style={{ 
-                    background: 'rgba(248, 200, 200, 0.2)',
-                    border: '1px solid #F8C8C8'
-                  }}
-                >
-                  <p className="font-light italic text-base" style={{ color: '#5a4a6e' }}>
-                    &ldquo;{result.pullQuote}&rdquo;
-                  </p>
+              {/* PRIORITY 2: PULL QUOTE as DISPLAY ELEMENT */}
+              <div className="text-center mb-6">
+                <div className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <div className="text-2xl md:text-3xl font-black leading-tight tracking-wide">
+                    "{result.pullQuote}"
+                  </div>
                 </div>
+              </div>
 
-                <div className="text-sm text-center leading-relaxed font-light px-2" style={{ color: '#8a7a9e' }}>
+              {/* Feedback with better typography */}
+              <div className="text-center mb-6">
+                <p className="text-lg leading-relaxed font-medium px-2" style={{ color: '#5a4a6e' }}>
                   {result.feedback}
-                </div>
+                </p>
+              </div>
 
-                {/* Fixed Flags Display */}
-                {result.flags && result.flags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 justify-center pt-2">
-                    {result.flags.slice(0, 3).map((flag, idx) => (
-                      <div 
+              {/* PRIORITY 4: COLOR-CODED FLAGS with visual impact */}
+              {result.flags && result.flags.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-center text-sm font-bold uppercase tracking-widest mb-3" style={{ color: '#8a7a9e' }}>
+                    Flags Detected
+                  </h3>
+                  <div className="flex flex-wrap gap-2 justify-center">
+                    {result.flags.slice(0, 5).map((flag, idx) => (
+                      <span 
                         key={idx} 
-                        className="px-4 py-2 rounded-full text-xs font-light"
-                        style={{
-                          background: 'rgba(226, 209, 249, 0.3)',
-                          color: '#5a4a6e',
-                          border: '1px solid #E2D1F9'
-                        }}
+                        className={`px-4 py-2 rounded-full text-sm font-bold border-2 ${getFlagColor(flag)}`}
                       >
                         {flag.emoji || '🚩'} {flag.type || flag}
-                      </div>
+                      </span>
                     ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                <div 
-                  className="text-center text-xs pt-6 font-light tracking-wide"
-                  style={{ 
-                    color: '#b0a0c8',
-                    borderTop: '1px solid #E2D1F9'
-                  }}
-                >
-                  VibeScore — Clarity before you reply
+              {/* Brand watermark optimized for screenshots */}
+              <div className="text-center pt-4 border-t border-gray-200">
+                <div className="text-xs font-bold uppercase tracking-widest" style={{ color: '#b0a0c8' }}>
+                  VibeScore.app — Clarity before you reply
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Response Suggestions */}
+          {/* Response Suggestions - ENHANCED */}
           <div 
-            className="rounded-3xl p-6 shadow-lg border-2"
+            className="rounded-3xl p-6 shadow-2xl border-2 backdrop-blur-sm"
             style={{
-              background: '#FFFBFB',
-              borderColor: 'rgba(255,255,255,0.8)'
+              background: 'linear-gradient(135deg, #FFFBFB 0%, #FEF7FF 100%)',
+              borderColor: 'rgba(255,255,255,0.9)'
             }}
           >
-            <h3 className="font-light text-lg mb-6 text-center tracking-wide" style={{ color: '#5a4a6e' }}>How you might respond</h3>
+            <h3 className="font-bold text-xl mb-6 text-center tracking-wide" style={{ color: '#5a4a6e' }}>
+              How you might respond
+            </h3>
             
-            <div className="flex gap-3 mb-6 justify-center">
-              {['empathetic', 'direct', 'playful'].map((tone) => (
+            {/* PRIORITY 6: Enhanced tone selector */}
+            <div className="flex gap-2 mb-6 justify-center">
+              {[
+                { key: 'empathetic', label: '💖 Empathetic', emoji: '💖' },
+                { key: 'direct', label: '💫 Direct', emoji: '💫' },
+                { key: 'playful', label: '😄 Playful', emoji: '😄' }
+              ].map(({ key, label, emoji }) => (
                 <button
-                  key={tone}
-                  onClick={() => setActiveTone(tone)}
-                  className="px-5 py-2.5 rounded-full text-sm font-light capitalize transition-all tracking-wide"
-                  style={
-                    activeTone === tone
-                      ? { 
-                          background: '#c18de5', 
-                          color: '#ffffff',
-                          border: '1px solid #c18de5'
-                        }
-                      : { 
-                          background: 'rgba(193, 141, 229, 0.1)', 
-                          color: '#5a4a6e', 
-                          border: '1px solid #c18de5' 
-                        }
-                  }
+                  key={key}
+                  onClick={() => setActiveTone(key)}
+                  className={`px-4 py-3 rounded-full text-sm font-bold transition-all tracking-wide border-2 ${
+                    activeTone === key
+                      ? 'bg-purple-600 text-white border-purple-700 shadow-lg scale-105'
+                      : 'bg-white text-purple-600 border-purple-200 hover:bg-purple-50'
+                  }`}
                 >
-                  {tone}
+                  <span className="text-base mr-1">{emoji}</span>
+                  {label.split(' ')[1]}
                 </button>
               ))}
             </div>
 
             <div className="space-y-4">
+              {/* Speech bubble aesthetic for selected response */}
               <div 
-                className="rounded-2xl p-6"
+                className="rounded-2xl p-6 relative"
                 style={{
-                  background: 'rgba(248, 200, 200, 0.1)',
-                  border: '1px solid #F8C8C8'
+                  background: 'linear-gradient(135deg, #F8C8C8 0%, #E2D1F9 100%)',
+                  border: '2px solid rgba(255,255,255,0.8)'
                 }}
               >
-                <p className="text-base font-light leading-relaxed" style={{ color: '#5a4a6e' }}>
-                  💬 {result.replies?.[activeTone]?.text || "No response available"}
+                <div className="text-2xl absolute -top-3 -left-3">💬</div>
+                <p className="text-lg font-semibold leading-relaxed text-center" style={{ color: '#5a4a6e' }}>
+                  {result.replies?.[activeTone]?.text || "No response available"}
                 </p>
               </div>
-              <p className="text-sm text-center font-light leading-relaxed px-2" style={{ color: '#8a7a9e' }}>
+              
+              {/* Rationale with better visibility */}
+              <p className="text-base text-center font-medium leading-relaxed px-2" style={{ color: '#8a7a9e' }}>
                 {result.replies?.[activeTone]?.why || "This response matches the selected tone"}
               </p>
             </div>
@@ -591,35 +620,38 @@ export default function HomePage() {
                 setCopiedResponse(true);
                 setTimeout(() => setCopiedResponse(false), 2000);
               }}
-              className="w-full mt-6 py-4 px-6 rounded-2xl shadow-md transition-all duration-200 tracking-wide font-semibold border-2"
+              className="w-full mt-6 py-4 px-6 rounded-2xl shadow-lg transition-all duration-200 tracking-wide font-bold border-2 hover:scale-105"
               style={{
-                background: '#c18de5',
+                background: 'linear-gradient(135deg, #c18de5 0%, #8B5FBF 100%)',
                 color: '#ffffff',
                 borderColor: 'rgba(255,255,255,0.3)'
               }}
             >
-              {copiedResponse ? 'Copied ✓' : 'Copy response'}
+              {copiedResponse ? '📋 Copied to clipboard!' : '📋 Copy this response'}
             </button>
           </div>
-<div 
-  className="rounded-3xl p-6 shadow-lg border-2"
-  style={{
-    background: '#FFFBFB',
-    borderColor: 'rgba(255,255,255,0.8)'
-  }}
->
-  <h3 className="font-light text-lg mb-4 text-center tracking-wide" style={{ color: '#5a4a6e' }}>This Vibe is Share-Worthy</h3>
-  
-  <div className="text-center space-y-4">
-    <div className="text-3xl">📸</div>
-    
-    <p className="text-sm font-light leading-relaxed px-2" style={{ color: '#8a7a9e' }}>
-      Screenshot this result and share it with your group chat - they need to see this read
-    </p>
 
-    
-  </div>
-</div>
+          {/* Share Section - OPTIMIZED for social sharing */}
+          <div 
+            className="rounded-3xl p-6 shadow-2xl border-2 backdrop-blur-sm"
+            style={{
+              background: 'linear-gradient(135deg, #FFFBFB 0%, #FEF7FF 100%)',
+              borderColor: 'rgba(255,255,255,0.9)'
+            }}
+          >
+            <h3 className="font-bold text-xl mb-4 text-center tracking-wide" style={{ color: '#5a4a6e' }}>
+              This Vibe is Share-Worthy 📸
+            </h3>
+            
+            <div className="text-center space-y-4">
+              <div className="text-4xl animate-pulse">✨</div>
+              
+              <p className="text-base font-medium leading-relaxed px-2" style={{ color: '#8a7a9e' }}>
+                Screenshot the result card above and share it with your group chat - they need to see this read
+              </p>
+            </div>
+          </div>
+
           {/* Back Button */}
           <button
             onClick={() => {
@@ -627,14 +659,14 @@ export default function HomePage() {
               setText('');
               setUploadedFile(null);
             }}
-            className="w-full py-3 rounded-2xl transition-all duration-200 tracking-wide font-light border-2"
+            className="w-full py-4 rounded-2xl transition-all duration-200 tracking-wide font-bold border-2 hover:scale-105"
             style={{
               background: 'transparent',
               color: '#8a7a9e',
               borderColor: 'rgba(255,255,255,0.5)'
             }}
           >
-            ← Analyze another text
+            ← Analyze another conversation
           </button>
         </div>
       )}
