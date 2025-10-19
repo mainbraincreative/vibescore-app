@@ -1,4 +1,4 @@
-// src/app/page.tsx - Complete with Instagram share
+// src/app/page.tsx - MOBILE SCREENSHOT OPTIMIZED
 'use client';
 
 import { useState } from 'react';
@@ -29,7 +29,7 @@ export default function HomePage() {
   const [text, setText] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<VibeResult | null>(null);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [activeTone, setActiveTone] = useState('empathetic');
   const [copiedResponse, setCopiedResponse] = useState(false);
@@ -181,65 +181,62 @@ export default function HomePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // If we have a file but no text yet (OCR still processing or failed)
-    if (uploadedFile && !text.trim()) {
-      alert('Please wait for the image to process, or try uploading again.');
+    // If we have uploaded files but no manual text, use OCR results
+    if (uploadedFiles.length > 0 && !text.trim()) {
+      // Files are already being processed by handleFileUpload, which calls analyzeText
       return;
     }
     
-    // If we have text from OCR or manual input
+    // If we have manual text, analyze it
     if (text.trim()) {
       analyzeText(text);
-    } else if (uploadedFile) {
-      // If we have a file but no text, try OCR again
-      setLoading(true);
-      try {
-        const { data: { text: extracted } } = await Tesseract.recognize(uploadedFile, 'eng');
-        setText(extracted);
-        analyzeText(extracted);
-      } catch (error) {
-        console.error('OCR failed on submit:', error);
-        setLoading(false);
-        alert('Failed to process the image. Please try another screenshot.');
-      }
-    } else {
-      alert('Please enter text or upload a screenshot.');
+    } else if (uploadedFiles.length === 0) {
+      alert('Please enter text or upload screenshots.');
     }
+    // Note: If both text and files exist, we prioritize the manual text
   };
 
-  const handleFileUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file');
+  const handleFileUpload = async (files: File[]) => {
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length === 0) {
+      alert('Please upload image files only');
       return;
     }
     
-    console.log('File selected:', file.name);
-    setUploadedFile(file);
+    console.log('Files selected:', imageFiles.map(f => f.name));
+    setUploadedFiles(prev => [...prev, ...imageFiles]);
     setLoading(true);
     
-    // Reset the file input immediately
+    // Reset file input
     const fileInput = document.getElementById('screenshot-upload') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
     
     try {
-      console.log('Starting OCR...');
-      const { data: { text: extracted } } = await Tesseract.recognize(file, 'eng');
-      console.log('OCR completed, text:', extracted.substring(0, 50) + '...');
+      let allExtractedText = '';
       
-      setText(extracted);
+      // Process all files with OCR
+      for (const file of imageFiles) {
+        console.log('Processing:', file.name);
+        const { data: { text: extracted } } = await Tesseract.recognize(file, 'eng');
+        allExtractedText += extracted + '\n\n';
+      }
+      
+      console.log('All OCR completed, extracted text length:', allExtractedText.length);
+      // DON'T setText here - keep the textarea clean for manual input
       setLoading(false);
       
-      // Auto-submit the form after successful OCR
+      // Auto-analyze the OCR text directly
       setTimeout(() => {
-        console.log('Auto-submitting form...');
-        analyzeText(extracted);
+        analyzeText(allExtractedText);
       }, 100);
       
     } catch (error) {
       console.error('OCR failed:', error);
       setLoading(false);
-      setUploadedFile(null);
-      alert('Failed to read text from image. Please try another screenshot.');
+      // Remove the failed files
+      setUploadedFiles(prev => prev.filter(f => !files.includes(f)));
+      alert('Failed to read text from some images. Please try again.');
     }
   };
 
@@ -257,7 +254,9 @@ export default function HomePage() {
     e.preventDefault();
     setIsDragOver(false);
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) handleFileUpload(files[0]);
+    if (files.length > 0) {
+      handleFileUpload(files);
+    }
   };
 
   const getScoreGradient = (score: number) => {
@@ -278,41 +277,41 @@ export default function HomePage() {
   const mood = result ? getScoreMood(result.score) : null;
 
   // PRIORITY 1: Dynamic score colors like Spotify Wrapped
-const getScoreColor = (score: number) => {
-  if (score >= 80) return 'text-green-500';
-  if (score >= 60) return 'text-yellow-500';
-  if (score >= 40) return 'text-orange-500';
-  return 'text-red-500';
-};
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return 'text-green-500';
+    if (score >= 60) return 'text-yellow-500';
+    if (score >= 40) return 'text-orange-500';
+    return 'text-red-500';
+  };
 
-const getScoreBgColor = (score: number) => {
-  if (score >= 80) return 'bg-green-100 border-green-200';
-  if (score >= 60) return 'bg-yellow-100 border-yellow-200';
-  if (score >= 40) return 'bg-orange-100 border-orange-200';
-  return 'bg-red-100 border-red-200';
-};
+  const getScoreBgColor = (score: number) => {
+    if (score >= 80) return 'bg-green-100 border-green-200';
+    if (score >= 60) return 'bg-yellow-100 border-yellow-200';
+    if (score >= 40) return 'bg-orange-100 border-orange-200';
+    return 'bg-red-100 border-red-200';
+  };
 
-// PRIORITY 4: Color-coded flag system
-const getFlagColor = (flag: any) => {
-  const flagText = flag.type || flag.toString().toLowerCase();
-  const redFlags = ['gaslighting', 'manipulation', 'toxic', 'red flag', 'controlling', 'abusive', 'frustration'];
-  const yellowFlags = ['mixed signals', 'passive aggressive', 'unclear', 'confusing', 'vague'];
-  const greenFlags = ['healthy', 'respectful', 'clear', 'positive', 'supportive'];
-  
-  if (redFlags.some(f => flagText.toLowerCase().includes(f))) 
-    return 'bg-red-500 text-white border-red-600 shadow-lg';
-  if (yellowFlags.some(f => flagText.toLowerCase().includes(f))) 
-    return 'bg-yellow-500 text-black border-yellow-600 shadow-lg';
-  if (greenFlags.some(f => flagText.toLowerCase().includes(f))) 
-    return 'bg-green-500 text-white border-green-600 shadow-lg';
-  
-  return 'bg-purple-500 text-white border-purple-600 shadow-lg';
-};
+  // PRIORITY 4: Color-coded flag system
+  const getFlagColor = (flag: any) => {
+    const flagText = flag.type || flag.toString().toLowerCase();
+    const redFlags = ['gaslighting', 'manipulation', 'toxic', 'red flag', 'controlling', 'abusive', 'frustration'];
+    const yellowFlags = ['mixed signals', 'passive aggressive', 'unclear', 'confusing', 'vague'];
+    const greenFlags = ['healthy', 'respectful', 'clear', 'positive', 'supportive'];
+    
+    if (redFlags.some(f => flagText.toLowerCase().includes(f))) 
+      return 'bg-red-500 text-white border-red-600 shadow-lg';
+    if (yellowFlags.some(f => flagText.toLowerCase().includes(f))) 
+      return 'bg-yellow-500 text-black border-yellow-600 shadow-lg';
+    if (greenFlags.some(f => flagText.toLowerCase().includes(f))) 
+      return 'bg-green-500 text-white border-green-600 shadow-lg';
+    
+    return 'bg-purple-500 text-white border-purple-600 shadow-lg';
+  };
 
   // Social sharing function
   const shareToSocial = (platform: string) => {
-    const shareText = `My VibeScore: ${result?.score} - ${mood?.text}\n\n"${result?.pullQuote}"\n\n${result?.feedback}\n\nAnalyzed by VibeScore.app 🔮`;
-    const shareUrl = 'https://vibescore.app';
+    const shareText = `My VibeScore: ${result?.score} - ${mood?.text}\n\n"${result?.pullQuote}"\n\n${result?.feedback}\n\nAnalyzed by GetVibeScore.com 🔮`;
+    const shareUrl = 'https://www.getvibescore.com';
     
     const urls: { [key: string]: string } = {
       twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`,
@@ -334,20 +333,20 @@ const getFlagColor = (flag: any) => {
       }}
     >
       {/* Header with Large Logo */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-4">
         <div className="flex flex-col items-center justify-center">
           <img 
             src="/vibescore-logo.png" 
             alt="VibeScore" 
-            className="h-32 w-64 object-contain mb-2"
+            className="h-32 w-64 object-contain mb-0"
             style={{ minHeight: '120px', minWidth: '256px' }}
           />
         </div>
         <p 
-          className="text-lg font-light tracking-wide max-w-md mx-auto mt-2"
+          className="text-lg font-light tracking-wide max-w-md mx-auto mt-0"
           style={{ color: '#5a4a6e' }}
         >
-          Your most experienced friend in the group chat
+          Spot the red flags before you ignore them
         </p>
       </div>
 
@@ -364,14 +363,14 @@ const getFlagColor = (flag: any) => {
             >
               <h2 className="text-lg font-semibold mb-4" style={{ color: '#5a4a6e' }}>Drop the Receipts</h2>
               <p className="text-sm font-light mb-4" style={{ color: '#8a7a9e' }}>
-                Paste that confusing text or upload a screenshot
+                Paste text OR upload screenshots
               </p>
               
               {/* Text Input - Separate from file upload */}
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="The text that's living rent-free in your mind... 💭"
+                placeholder="The convo that's living rent-free in your mind... 💭"
                 className="w-full h-32 p-4 rounded-xl focus:outline-none text-base resize-none font-light transition-all placeholder-gray-400 border-2 mb-4"
                 style={{
                   border: '2px solid #E2D1F9',
@@ -380,79 +379,88 @@ const getFlagColor = (flag: any) => {
                 }}
               />
               
-              {/* File Upload - Simplified */}
+              {/* File Upload - Multiple files enabled */}
               <div className="space-y-4">
-                {/* File Upload - Single area for both click and drag */}
-<div className="text-center">
-  <label 
-    htmlFor="screenshot-upload"
-    className="inline-flex items-center gap-2 px-6 py-4 rounded-xl border-2 border-dashed cursor-pointer transition-all hover:bg-purple-50 w-full justify-center"
-    style={{
-      borderColor: isDragOver ? '#8B5FBF' : '#E2D1F9',
-      background: isDragOver ? 'rgba(139, 95, 191, 0.1)' : 'rgba(226, 209, 249, 0.1)',
-      color: '#5a4a6e'
-    }}
-    onDragOver={handleDragOver}
-    onDragLeave={handleDragLeave}
-    onDrop={handleDrop}
-  >
-    <span className="text-2xl">📸</span>
-    <div className="text-left">
-      <p className="text-sm font-medium">Upload a screenshot</p>
-      <p className="text-xs" style={{ color: '#8a7a9e' }}>
-        Click to browse or drag & drop anywhere here
-      </p>
-    </div>
-  </label>
-  
-  <input
-    id="screenshot-upload"
-    type="file"
-    accept="image/*"
-    onChange={(e) => {
-      if (e.target.files && e.target.files[0]) {
-        handleFileUpload(e.target.files[0]);
-        e.target.value = '';
-      }
-    }}
-    className="hidden"
-  />
-</div>
-              </div>
-
-              {/* Uploaded File Indicator */}
-              {uploadedFile && (
-                <div className="mt-4 p-3 rounded-lg bg-green-50 border border-green-200">
-                  <p className="text-sm font-medium text-green-800 flex items-center gap-2">
-                    ✅ {uploadedFile.name}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setUploadedFile(null);
-                      setText('');
+                {/* File Input Button - Clear primary action */}
+                <div className="text-center">
+                  <label 
+                    htmlFor="screenshot-upload"
+                    className="inline-flex items-center gap-2 px-6 py-4 rounded-xl border-2 border-dashed cursor-pointer transition-all hover:bg-purple-50 w-full justify-center"
+                    style={{
+                      borderColor: isDragOver ? '#8B5FBF' : '#E2D1F9',
+                      background: isDragOver ? 'rgba(139, 95, 191, 0.1)' : 'rgba(226, 209, 249, 0.1)',
+                      color: '#5a4a6e'
                     }}
-                    className="text-xs text-green-600 hover:text-green-800 mt-1"
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
                   >
-                    Remove file
-                  </button>
+                    <span className="text-2xl">📸</span>
+                    <div className="text-left">
+                      <p className="text-sm font-medium">Upload screenshots</p>
+                      <p className="text-xs" style={{ color: '#8a7a9e' }}>
+                        Click to browse or drag & drop multiple images
+                      </p>
+                    </div>
+                  </label>
+                  
+                  <input
+                    id="screenshot-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const files = Array.from(e.target.files);
+                        handleFileUpload(files);
+                        e.target.value = '';
+                      }
+                    }}
+                    className="hidden"
+                  />
                 </div>
-              )}
 
-              <div className="text-right mt-2">
-                <div 
-                  className="text-xs font-light"
-                  style={{ color: '#b0a0c8' }}
-                >
-                  {text.length}/500 • Your future self thanks you
-                </div>
+                {/* Multiple files display */}
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm font-medium text-green-800">
+                      ✅ {uploadedFiles.length} screenshot(s) ready
+                    </p>
+                    <div className="max-h-32 overflow-y-auto">
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between text-xs text-green-700 bg-green-50 p-2 rounded">
+                          <span className="truncate flex-1">{file.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            className="text-red-600 hover:text-red-800 ml-2 text-xs"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUploadedFiles([]);
+                        setText('');
+                      }}
+                      className="text-xs text-green-600 hover:text-green-800"
+                    >
+                      Clear all files
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || (!text.trim() && !uploadedFile)}
+              disabled={loading || (!text.trim() && uploadedFiles.length === 0)}
               className="w-full py-4 text-base font-semibold rounded-2xl transition-all duration-200 disabled:opacity-50 tracking-wide shadow-lg hover:shadow-xl transform hover:scale-105 disabled:hover:scale-100 border-2"
               style={{
                 background: '#c18de5',
@@ -473,75 +481,112 @@ const getFlagColor = (flag: any) => {
         </div>
       )}
 
-            {/* Results Section - TRANSFORMED AESTHETICS */}
-            {result && (
-        <div className="max-w-md w-full space-y-6">
-          {/* Vibe Card - COMPLETELY REDESIGNED for Instagram screenshot */}
-          <div id="vibescore-result">
-            <div
-              className="relative rounded-3xl p-8 shadow-2xl border-2 backdrop-blur-sm"
-              style={{
-                background: 'linear-gradient(135deg, #FFFBFB 0%, #FEF7FF 100%)',
-                borderColor: 'rgba(255,255,255,0.9)'
-              }}
-            >
+      {/* Results Section - MOBILE SCREENSHOT OPTIMIZED */}
+      {result && (
+        <div className="w-full max-w-md mx-auto px-4 space-y-6">
+          {/* Vibe Card - OPTIMIZED FOR MOBILE SCREENSHOTS */}
+          <div 
+            id="vibescore-result"
+            className="min-h-[580px] flex flex-col justify-between rounded-3xl p-6 shadow-2xl border-2 backdrop-blur-sm mx-auto"
+            style={{
+              background: 'linear-gradient(135deg, #FFFBFB 0%, #FEF7FF 100%)',
+              borderColor: 'rgba(255,255,255,0.9)',
+              maxWidth: '400px',
+              width: '100%'
+            }}
+          >
+            <div className="space-y-4">
               {/* PRIORITY 1: HERO SCORE - Centered and dramatic */}
-              <div className="text-center mb-6">
-                <div className={`inline-flex flex-col items-center justify-center p-6 rounded-3xl border-2 ${getScoreBgColor(result.score)}`}>
+              <div className="text-center">
+                <div className={`inline-flex flex-col items-center justify-center p-4 rounded-3xl border-2 ${getScoreBgColor(result.score)}`}>
                   {/* Dynamic score with color zones */}
-                  <div className={`text-7xl font-black ${getScoreColor(result.score)} animate-pulse`}>
+                  <div className={`text-6xl font-black ${getScoreColor(result.score)}`}>
                     {result.score}
                   </div>
-                  <div className="text-lg font-bold uppercase tracking-widest mt-2" style={{ color: '#5a4a6e' }}>
+                  <div className="text-md font-bold uppercase tracking-widest mt-1" style={{ color: '#5a4a6e' }}>
                     VibeScore
                   </div>
                 </div>
                 
                 {/* Mood with larger emoji */}
-                <div className="mt-4">
-                  <div className="text-4xl mb-2">{mood?.emoji}</div>
-                  <h1 className="text-2xl font-bold tracking-wide" style={{ color: '#5a4a6e' }}>
+                <div className="mt-3">
+                  <div className="text-3xl mb-1">{mood?.emoji}</div>
+                  <h1 className="text-xl font-bold" style={{ color: '#5a4a6e' }}>
                     {mood?.text}
                   </h1>
                 </div>
               </div>
 
-              {/* PRIORITY 5: EMOJI STRIP as visual divider */}
-              <div className="flex justify-center gap-3 my-6 text-3xl">
-                {['😬', '⚠️', '🚩', '💀', '🫠'].map((emoji, index) => (
-                  <span key={index} className="animate-bounce" style={{ animationDelay: `${index * 0.1}s` }}>
-                    {emoji}
-                  </span>
-                ))}
+              {/* DYNAMIC EMOJI STRIP based on vibe score */}
+              <div className="flex justify-center gap-2 my-4 text-2xl">
+                {(() => {
+                  const score = result.score;
+                  const flags = result.flags || [];
+                  
+                  // Check for specific red flags that should override the score-based emojis
+                  const hasRedFlags = flags.some(flag => 
+                    (flag.type || flag.toString()).toLowerCase().includes('gaslighting') ||
+                    (flag.type || flag.toString()).toLowerCase().includes('toxic') ||
+                    (flag.type || flag.toString()).toLowerCase().includes('manipulation')
+                  );
+                  
+                  const hasGreenFlags = flags.some(flag => 
+                    (flag.type || flag.toString()).toLowerCase().includes('healthy') ||
+                    (flag.type || flag.toString()).toLowerCase().includes('positive') ||
+                    (flag.type || flag.toString()).toLowerCase().includes('respectful')
+                  );
+
+                  let emojis: string[];
+                  
+                  if (hasRedFlags) {
+                    emojis = ['🚩', '💀', '🏃‍♀️', '😵', '🆘']; // Major red flags
+                  } else if (score >= 80 || hasGreenFlags) {
+                    emojis = ['💖', '✨', '🌟', '🎉', '🥰']; // Great vibes
+                  } else if (score >= 60) {
+                    emojis = ['💫', '😊', '👍', '👌', '💕']; // Good vibes
+                  } else if (score >= 40) {
+                    emojis = ['🤔', '😐', '🧐', '💭', '⚠️']; // Mixed signals
+                  } else if (score >= 20) {
+                    emojis = ['😬', '😟', '🤨', '🚩', '⚠️']; // Concerning
+                  } else {
+                    emojis = ['🚩', '💀', '🫠', '😵', '🏃‍♀️']; // Run away
+                  }
+                  
+                  return emojis.map((emoji, index) => (
+                    <span key={index} className="animate-bounce" style={{ animationDelay: `${index * 0.1}s` }}>
+                      {emoji}
+                    </span>
+                  ));
+                })()}
               </div>
 
               {/* PRIORITY 2: PULL QUOTE as DISPLAY ELEMENT */}
-              <div className="text-center mb-6">
+              <div className="text-center">
                 <div className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  <div className="text-2xl md:text-3xl font-black leading-tight tracking-wide">
-                    "{result.pullQuote}"
+                  <div className="text-xl font-black leading-tight tracking-wide line-clamp-3">
+                    "{result.pullQuote.length > 120 ? result.pullQuote.substring(0, 120) + '...' : result.pullQuote}"
                   </div>
                 </div>
               </div>
 
               {/* Feedback with better typography */}
-              <div className="text-center mb-6">
-                <p className="text-lg leading-relaxed font-medium px-2" style={{ color: '#5a4a6e' }}>
+              <div className="text-center">
+                <p className="text-sm leading-relaxed font-medium line-clamp-2" style={{ color: '#5a4a6e' }}>
                   {result.feedback}
                 </p>
               </div>
 
               {/* PRIORITY 4: COLOR-CODED FLAGS with visual impact */}
               {result.flags && result.flags.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-center text-sm font-bold uppercase tracking-widest mb-3" style={{ color: '#8a7a9e' }}>
+                <div>
+                  <h3 className="text-center text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#8a7a9e' }}>
                     Flags Detected
                   </h3>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {result.flags.slice(0, 5).map((flag, idx) => (
+                  <div className="flex flex-wrap gap-1 justify-center">
+                    {result.flags.slice(0, 3).map((flag, idx) => (
                       <span 
                         key={idx} 
-                        className={`px-4 py-2 rounded-full text-sm font-bold border-2 ${getFlagColor(flag)}`}
+                        className={`px-3 py-1 rounded-full text-xs font-bold border ${getFlagColor(flag)}`}
                       >
                         {flag.emoji || '🚩'} {flag.type || flag}
                       </span>
@@ -549,17 +594,20 @@ const getFlagColor = (flag: any) => {
                   </div>
                 </div>
               )}
+            </div>
 
-              {/* Brand watermark optimized for screenshots */}
-              <div className="text-center pt-4 border-t border-gray-200">
-                <div className="text-xs font-bold uppercase tracking-widest" style={{ color: '#b0a0c8' }}>
-                  VibeScore.app — Clarity before you reply
-                </div>
+            {/* Brand Watermark - Always visible at bottom */}
+            <div className="text-center pt-3 border-t border-gray-200 mt-4">
+              <div className="text-sm font-bold uppercase tracking-widest mb-1" style={{ color: '#8B5FBF' }}>
+                GetVibeScore.com
+              </div>
+              <div className="text-xs" style={{ color: '#b0a0c8' }}>
+                Get your vibe checked 👉
               </div>
             </div>
           </div>
 
-          {/* Response Suggestions - ENHANCED */}
+          {/* Response Suggestions */}
           <div 
             className="rounded-3xl p-6 shadow-2xl border-2 backdrop-blur-sm"
             style={{
@@ -571,7 +619,6 @@ const getFlagColor = (flag: any) => {
               How you might respond
             </h3>
             
-            {/* PRIORITY 6: Enhanced tone selector */}
             <div className="flex gap-2 mb-6 justify-center">
               {[
                 { key: 'empathetic', label: '💖 Empathetic', emoji: '💖' },
@@ -594,7 +641,6 @@ const getFlagColor = (flag: any) => {
             </div>
 
             <div className="space-y-4">
-              {/* Speech bubble aesthetic for selected response */}
               <div 
                 className="rounded-2xl p-6 relative"
                 style={{
@@ -608,7 +654,6 @@ const getFlagColor = (flag: any) => {
                 </p>
               </div>
               
-              {/* Rationale with better visibility */}
               <p className="text-base text-center font-medium leading-relaxed px-2" style={{ color: '#8a7a9e' }}>
                 {result.replies?.[activeTone]?.why || "This response matches the selected tone"}
               </p>
@@ -631,7 +676,7 @@ const getFlagColor = (flag: any) => {
             </button>
           </div>
 
-          {/* Share Section - OPTIMIZED for social sharing */}
+          {/* Share Section */}
           <div 
             className="rounded-3xl p-6 shadow-2xl border-2 backdrop-blur-sm"
             style={{
@@ -640,14 +685,14 @@ const getFlagColor = (flag: any) => {
             }}
           >
             <h3 className="font-bold text-xl mb-4 text-center tracking-wide" style={{ color: '#5a4a6e' }}>
-              This Vibe is Share-Worthy 📸
+              Don't Keep This to Yourself 📸
             </h3>
             
             <div className="text-center space-y-4">
               <div className="text-4xl animate-pulse">✨</div>
               
               <p className="text-base font-medium leading-relaxed px-2" style={{ color: '#8a7a9e' }}>
-                Screenshot the result card above and share it with your group chat - they need to see this read
+                Screenshot this. You know who needs it
               </p>
             </div>
           </div>
@@ -657,7 +702,7 @@ const getFlagColor = (flag: any) => {
             onClick={() => {
               setResult(null);
               setText('');
-              setUploadedFile(null);
+              setUploadedFiles([]);
             }}
             className="w-full py-4 rounded-2xl transition-all duration-200 tracking-wide font-bold border-2 hover:scale-105"
             style={{
@@ -677,10 +722,10 @@ const getFlagColor = (flag: any) => {
           <div className="text-lg">🔒</div>
           <div className="text-left">
             <p className="text-sm font-medium" style={{ color: '#5a4a6e' }}>
-              Your secrets are safe with us
+              Nothing is stored or saved
             </p>
             <p className="text-xs" style={{ color: '#8a7a9e' }}>
-              We're the friend who never screenshots. Analysis happens in real-time.
+              Your conversation's analyzed once, then it's permanently deleted.
             </p>
           </div>
         </div>
