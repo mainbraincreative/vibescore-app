@@ -34,6 +34,7 @@ export default function HomePage() {
   const [activeTone, setActiveTone] = useState('empathetic');
   const [copiedResponse, setCopiedResponse] = useState(false);
   const [copiedShare, setCopiedShare] = useState(false);
+  const MAX_FILES = 3; // Maximum file limit
 
   // Instagram screenshot function
   const captureAndShareInstagram = async () => {
@@ -197,6 +198,13 @@ export default function HomePage() {
   };
 
   const handleFileUpload = async (files: File[]) => {
+    // Check if adding these files would exceed the limit
+    if (uploadedFiles.length + files.length > MAX_FILES) {
+      const excessFiles = (uploadedFiles.length + files.length) - MAX_FILES;
+      alert(`Hold up, bestie - ${MAX_FILES} screenshots max. Remove ${excessFiles} file(s) first.`);
+      return;
+    }
+    
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
     
     if (imageFiles.length === 0) {
@@ -399,7 +407,7 @@ export default function HomePage() {
                     <div className="text-left">
                       <p className="text-sm font-medium">Upload screenshots</p>
                       <p className="text-xs" style={{ color: '#8a7a9e' }}>
-                        Click to browse or drag & drop multiple images
+                        Click to browse or drag & drop (max {MAX_FILES} images)
                       </p>
                     </div>
                   </label>
@@ -424,7 +432,7 @@ export default function HomePage() {
                 {uploadedFiles.length > 0 && (
                   <div className="mt-4 space-y-2">
                     <p className="text-sm font-medium text-green-800">
-                      ✅ {uploadedFiles.length} screenshot(s) ready
+                      ✅ {uploadedFiles.length}/{MAX_FILES} screenshot(s) ready
                     </p>
                     <div className="max-h-32 overflow-y-auto">
                       {uploadedFiles.map((file, index) => (
@@ -561,20 +569,20 @@ export default function HomePage() {
               </div>
 
               {/* PRIORITY 2: PULL QUOTE as DISPLAY ELEMENT */}
-<div className="text-center">
-  <div className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-    <div className="text-xl font-black leading-tight tracking-wide">
-      "{result.pullQuote}"
-    </div>
-  </div>
-</div>
+              <div className="text-center">
+                <div className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <div className="text-xl font-black leading-tight tracking-wide">
+                    "{result.pullQuote}"
+                  </div>
+                </div>
+              </div>
 
               {/* Feedback with better typography */}
-<div className="text-center">
-  <p className="text-sm leading-relaxed font-medium" style={{ color: '#5a4a6e' }}>
-    {result.feedback}
-  </p>
-</div>
+              <div className="text-center">
+                <p className="text-sm leading-relaxed font-medium" style={{ color: '#5a4a6e' }}>
+                  {result.feedback}
+                </p>
+              </div>
 
               {/* PRIORITY 4: COLOR-CODED FLAGS with visual impact */}
               {result.flags && result.flags.length > 0 && (
@@ -602,7 +610,7 @@ export default function HomePage() {
                 GetVibeScore.com
               </div>
               <div className="text-xs" style={{ color: '#b0a0c8' }}>
-                Get your vibe checked 👉
+                Stop guessing, start knowing 👉
               </div>
             </div>
           </div>
