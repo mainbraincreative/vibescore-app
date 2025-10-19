@@ -561,20 +561,20 @@ export default function HomePage() {
               </div>
 
               {/* PRIORITY 2: PULL QUOTE as DISPLAY ELEMENT */}
-              <div className="text-center">
-                <div className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  <div className="text-xl font-black leading-tight tracking-wide line-clamp-3">
-                    "{result.pullQuote.length > 120 ? result.pullQuote.substring(0, 120) + '...' : result.pullQuote}"
-                  </div>
-                </div>
-              </div>
+<div className="text-center">
+  <div className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+    <div className="text-xl font-black leading-tight tracking-wide">
+      "{result.pullQuote}"
+    </div>
+  </div>
+</div>
 
               {/* Feedback with better typography */}
-              <div className="text-center">
-                <p className="text-sm leading-relaxed font-medium line-clamp-2" style={{ color: '#5a4a6e' }}>
-                  {result.feedback}
-                </p>
-              </div>
+<div className="text-center">
+  <p className="text-sm leading-relaxed font-medium" style={{ color: '#5a4a6e' }}>
+    {result.feedback}
+  </p>
+</div>
 
               {/* PRIORITY 4: COLOR-CODED FLAGS with visual impact */}
               {result.flags && result.flags.length > 0 && (
