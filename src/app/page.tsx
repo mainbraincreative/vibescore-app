@@ -429,7 +429,7 @@ export default function HomePage() {
                     <div className="max-h-32 overflow-y-auto">
                       {uploadedFiles.map((file, index) => (
                         <div key={index} className="flex items-center justify-between text-xs text-green-700 bg-green-50 p-2 rounded">
-                          <span className="truncate flex-1">{file.name}</span>
+                          <span className="flex-1">{file.name}</span>
                           <button
                             type="button"
                             onClick={() => {
